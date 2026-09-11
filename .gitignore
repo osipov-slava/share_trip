@@ -1,4 +1,6 @@
 covertage.*
 .idea
 .vscode
+.gigaide
+.gigacode
 bin
