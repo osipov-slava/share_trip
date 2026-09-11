@@ -30,14 +30,6 @@ help:
 	@echo "  make migrate-up    - Apply all migrations"
 	@echo "  make migrate-down  - Rollback last migration"
 	@echo "  make migrate-status- Show migration status"
-	@echo ""
-	@echo "📖 Examples:"
-	@echo "  make deps          # Install tools"
-	@echo "  make up            # Start DB"
-	@echo "  make migrate-up    # Apply migrations"
-	@echo "  make e2e           # Check service health"
-	@echo "  make check         # Full CI check"
-	@echo "  make build         # Build binary"
 	@echo "═══════════════════════════════════════════════════════════"
 
 .PHONY: deps

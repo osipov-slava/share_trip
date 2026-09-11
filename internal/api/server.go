@@ -1,13 +1,25 @@
 package api
 
 import (
+	"job4j.ru/share_trip/internal/domain"
 	"job4j.ru/share_trip/internal/repository"
+	"job4j.ru/share_trip/internal/service"
 )
 
 type Server struct {
 	Repository *repository.RepoPg
+	Service    *service.Service
 }
 
 func NewServer(repo *repository.RepoPg) *Server {
-	return &Server{Repository: repo}
+	dom := &domain.Domain{
+		Repository: repo,
+	}
+	svc := &service.Service{
+		Domain: dom,
+	}
+	return &Server{
+		Repository: repo,
+		Service:    svc,
+	}
 }

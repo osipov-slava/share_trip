@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -36,7 +37,9 @@ func main() {
 	app := fiber.New()
 	server.Route(app.Group("/api"))
 
-	err = app.Listen(":8080")
+	port := config.EnvInt("APP_PORT", 8080)
+	addr := fmt.Sprintf(":%d", port)
+	err = app.Listen(addr)
 	if err != nil {
 		log.Fatal(err)
 	}
