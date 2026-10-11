@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type TripHistory struct {
@@ -17,9 +18,10 @@ type TripHistory struct {
 
 func (r *RepoPg) CreateTripHistory(
 	ctx context.Context,
+	tx pgx.Tx,
 	tripHistory TripHistory,
 ) error {
-	return r.pool.QueryRow(
+	return tx.QueryRow(
 		ctx,
 		`INSERT INTO trip_history (id, trip_id, from_status, to_status, created_at)
 		 VALUES ($1, $2, $3, $4, $5)

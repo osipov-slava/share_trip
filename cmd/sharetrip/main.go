@@ -32,7 +32,7 @@ func main() {
 
 	repo := repository.NewRepoPg(pool)
 
-	server := api.NewServer(repo)
+	server := api.NewServer(repo, pool)
 
 	app := fiber.New()
 	server.Route(app.Group("/api"))

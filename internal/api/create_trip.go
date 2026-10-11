@@ -1,11 +1,14 @@
 package api
 
 import (
+	"errors"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/google/uuid"
+	"job4j.ru/share_trip/internal/domain"
 	"job4j.ru/share_trip/internal/service"
 )
 
@@ -41,27 +44,21 @@ func (s *Server) CreateTrip(c *fiber.Ctx) error {
 	}
 
 	res, err := s.Service.CreateTrip(c.Context(),
-		service.CreateTripRequest{
-			ClientID:       req.ClientID,
-			FromPoint:      req.FromPoint,
-			ToPoint:        req.ToPoint,
-			DepartureTime:  req.DepartureTime,
-			AvailableSeats: req.AvailableSeats,
-		})
+		service.CreateTripRequest(req))
 	if err != nil {
-		//TODO: обработать виды ошибок
 		log.Errorw("s.Service.CreateTrip", err)
+		if errors.Is(err, domain.ErrInvalidAvailableSeats) ||
+			errors.Is(err, domain.ErrInvalidDepartureTime) ||
+			errors.Is(err, domain.ErrInvalidPoints) ||
+			errors.Is(err, domain.ErrInvalidClientID) {
+			msg := err.Error()
+			if i := strings.LastIndex(msg, ": "); i != -1 {
+				msg = msg[i+2:]
+			}
+			return fiber.NewError(fiber.StatusBadRequest, msg)
+		}
 		return fiber.NewError(fiber.StatusInternalServerError, "internal server error")
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(CreateTripResponse{
-		ID:             res.ID,
-		ClientID:       res.ClientID,
-		FromPoint:      res.FromPoint,
-		ToPoint:        res.ToPoint,
-		DepartureTime:  res.DepartureTime,
-		AvailableSeats: res.AvailableSeats,
-		Status:         res.Status,
-		CreatedAt:      res.CreatedAt,
-	})
+	return c.Status(fiber.StatusCreated).JSON(CreateTripResponse(res))
 }

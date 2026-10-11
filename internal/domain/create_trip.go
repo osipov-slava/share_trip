@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"job4j.ru/share_trip/internal/repository"
 )
 
@@ -35,7 +36,11 @@ type CreateTripResponse struct {
 	CreatedAt      time.Time
 }
 
-func (d Domain) CreateTrip(ctx context.Context, req CreateTripRequest) (CreateTripResponse, error) {
+func (d Domain) CreateTrip(
+	ctx context.Context,
+	tx pgx.Tx,
+	req CreateTripRequest,
+) (CreateTripResponse, error) {
 	noValidResponse := CreateTripResponse{
 		ClientID:       req.ClientID,
 		FromPoint:      req.FromPoint,
@@ -63,11 +68,11 @@ func (d Domain) CreateTrip(ctx context.Context, req CreateTripRequest) (CreateTr
 		ToPoint:        req.ToPoint,
 		DepartureTime:  req.DepartureTime,
 		AvailableSeats: req.AvailableSeats,
-		Status:         "draft",
+		Status:         TripStatusDraft,
 		CreatedAt:      time.Now(),
 	}
 
-	createdTrip, err := d.Repository.CreateTrip(ctx, trip)
+	createdTrip, err := d.Repository.CreateTrip(ctx, tx, trip)
 	if err != nil {
 		return CreateTripResponse{}, err
 	}
@@ -77,11 +82,11 @@ func (d Domain) CreateTrip(ctx context.Context, req CreateTripRequest) (CreateTr
 		ID:         tripHistoryID,
 		TripID:     tripID,
 		FromStatus: nil,
-		ToStatus:   "draft",
+		ToStatus:   TripStatusDraft,
 		CreatedAt:  time.Now(),
 	}
 
-	err = d.Repository.CreateTripHistory(ctx, tripHistory)
+	err = d.Repository.CreateTripHistory(ctx, tx, tripHistory)
 	if err != nil {
 		return CreateTripResponse{}, err
 	}
