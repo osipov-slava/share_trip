@@ -57,7 +57,7 @@ func (s *Server) CreateTrip(c *fiber.Ctx) error {
 			}
 			return fiber.NewError(fiber.StatusBadRequest, msg)
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, "internal server error")
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(CreateTripResponse(res))

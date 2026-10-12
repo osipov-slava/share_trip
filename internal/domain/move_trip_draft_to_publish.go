@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -26,7 +27,7 @@ func (d *Domain) MoveTripDraftToPublish(
 ) (*MoveTripDraftToPublishModelResponse, error) {
 	trip, err := d.Repository.GetForUpdateByID(ctx, tx, req.ID)
 	if err != nil {
-		return nil, fmt.Errorf("tripRepository.GetForUpdateByID: %w", err)
+		return nil, fmt.Errorf("TripRepository.GetForUpdateByID: %w", err)
 	}
 
 	if trip.ClientID != req.ClientID {
@@ -43,9 +44,10 @@ func (d *Domain) MoveTripDraftToPublish(
 		return nil, fmt.Errorf("invalid trip status: expected %s, got %s", TripStatusDraft, trip.Status)
 	}
 
+	trip.Status = TripStatusPublished
 	updatedTrip, err := d.Repository.Update(ctx, tx, trip)
 	if err != nil {
-		return nil, fmt.Errorf("tripRepository.Update: %w", err)
+		return nil, fmt.Errorf("TripRepository.Update: %w", err)
 	}
 
 	draftStatus := string(TripStatusDraft)
@@ -61,7 +63,27 @@ func (d *Domain) MoveTripDraftToPublish(
 
 	err = d.Repository.CreateTripHistory(ctx, tx, tripHistory)
 	if err != nil {
-		return nil, fmt.Errorf("tripRepository.Update.CreateTripHistory: %w", err)
+		return nil, fmt.Errorf("TripHistoryRepository.CreateTripHistory: %w", err)
+	}
+
+	payload, err := json.Marshal(map[string]string{
+		"task": req.ID.String(),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("domain.MoveTripDraftToPublish json.Marshal: %w", err)
+	}
+
+	outboxEvent := repository.OutboxEvent{
+		ID:          tripHistoryID,
+		EventName:   "trip_published",
+		AggregateID: req.ID,
+		Payload:     string(payload), // `{"task":"..."}`
+		CreatedAt:   time.Now(),
+	}
+
+	err = d.Repository.CreateOutboxEvent(ctx, tx, outboxEvent)
+	if err != nil {
+		return nil, fmt.Errorf("repository.CreateOutboxEvent: %w", err)
 	}
 
 	return &MoveTripDraftToPublishModelResponse{

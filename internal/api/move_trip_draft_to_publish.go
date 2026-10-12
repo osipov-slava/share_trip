@@ -24,7 +24,7 @@ func (s *Server) MoveTripDraftToPublish(c *fiber.Ctx) error {
 	res, err := s.Service.MoveTripDraftToPublish(c.Context(),
 		service.MoveTripDraftToPublishModelRequest(req))
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "internal server error")
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(MoveTripDraftToPublishModelResponse(*res))
